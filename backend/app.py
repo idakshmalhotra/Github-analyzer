@@ -7,6 +7,11 @@ import re
 from flask_cors import CORS
 import time
 import requests
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file
 def load_env():
@@ -17,7 +22,8 @@ def load_env():
                     key, value = line.strip().split('=', 1)
                     os.environ[key] = value
     except FileNotFoundError:
-        pass  # .env file doesn't exist, continue without it
+        logger.info("No .env file found, continuing without it")
+        pass
 
 load_env()
 
@@ -28,12 +34,11 @@ def get_github_client():
     # Optionally use a GitHub token for higher rate limits
     token = os.environ.get('GITHUB_TOKEN')
     if token:
-        print(f"Using GitHub token for higher rate limits")
-        return Github(token, per_page=30)  # Reduce per_page to avoid rate limits
+        logger.info("Using GitHub token for higher rate limits")
+        return Github(token, per_page=30)
     else:
-        print("No GitHub token found. Using anonymous access (60 requests/hour limit)")
-        print("To increase limits, set GITHUB_TOKEN environment variable")
-        return Github(per_page=30)  # Reduce per_page to avoid rate limits
+        logger.info("No GitHub token found. Using anonymous access (60 requests/hour limit)")
+        return Github(per_page=30)
 
 def safe_github_call(func, max_retries=3, delay=1):
     """Safely call GitHub API with retry logic and rate limit handling"""
@@ -41,16 +46,14 @@ def safe_github_call(func, max_retries=3, delay=1):
         try:
             return func()
         except Exception as e:
+            logger.error(f"GitHub API error (attempt {attempt + 1}/{max_retries}): {str(e)}")
             if "rate limit" in str(e).lower() or "403" in str(e):
                 if attempt < max_retries - 1:
-                    wait_time = delay * (2 ** attempt)  # Exponential backoff
-                    print(f"Rate limited, waiting {wait_time}s before retry {attempt + 1}")
+                    wait_time = delay * (2 ** attempt)
+                    logger.info(f"Rate limited, waiting {wait_time}s before retry")
                     time.sleep(wait_time)
                     continue
-                else:
-                    raise Exception("GitHub API rate limit exceeded. Please try again in a few minutes.")
-            else:
-                raise e
+            raise e
 
 def build_tree(contents):
     tree = []
@@ -77,56 +80,68 @@ def repo_tree():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze', methods=['GET'])
+@app.route('/api/analyze', methods=['GET'])
 def analyze_repo():
-    repo_full_name = request.args.get('repo')  # e.g. 'octocat/Hello-World'
+    repo_full_name = request.args.get('repo')
+    logger.info(f"Analyzing repository: {repo_full_name}")
+    
     if not repo_full_name:
+        logger.error("Missing repository name")
         return jsonify({'error': 'Missing repo parameter'}), 400
     
     try:
         g = get_github_client()
         
         def get_repo_data():
+            logger.debug(f"Fetching data for {repo_full_name}")
             repo = g.get_repo(repo_full_name)
+            
+            # Get languages
+            logger.debug("Fetching languages")
             languages = repo.get_languages()
             
-            # Limit contributors to top 10 to avoid rate limits
+            # Get contributors
+            logger.debug("Fetching contributors")
             contributors_list = []
             try:
-                contributors = list(repo.get_contributors())[:10]  # Only get top 10
+                contributors = list(repo.get_contributors())[:10]
                 for contributor in contributors:
                     contributors_list.append({
                         'login': contributor.login,
                         'contributions': contributor.contributions
                     })
             except Exception as e:
-                print(f"Could not fetch contributors: {e}")
-                contributors_list = []
+                logger.error(f"Error fetching contributors: {e}")
             
-            # Limit files to avoid rate limits
-            try:
-                files = repo.get_contents("")
-                file_count = len(files)
-            except Exception as e:
-                print(f"Could not fetch files: {e}")
-                file_count = 0
-            
-            return {
+            # Get basic stats
+            logger.debug("Compiling repository statistics")
+            stats = {
                 'name': repo.name,
                 'full_name': repo.full_name,
                 'description': repo.description,
+                'stars': repo.stargazers_count,
+                'forks': repo.forks_count,
+                'watchers': repo.watchers_count,
+                'open_issues': repo.open_issues_count,
                 'languages': languages,
                 'contributors': contributors_list,
-                'file_count': file_count
+                'created_at': repo.created_at.isoformat() if repo.created_at else None,
+                'updated_at': repo.updated_at.isoformat() if repo.updated_at else None
             }
+            
+            logger.info(f"Successfully analyzed repository {repo_full_name}")
+            return stats
         
         data = safe_github_call(get_repo_data)
         return jsonify(data)
         
     except Exception as e:
         error_msg = str(e)
+        logger.error(f"Error analyzing repository: {error_msg}")
         if "rate limit" in error_msg.lower():
             return jsonify({'error': 'GitHub API rate limit exceeded. Please try again in a few minutes.'}), 429
+        elif "Not Found" in error_msg:
+            return jsonify({'error': f'Repository {repo_full_name} not found'}), 404
         else:
             return jsonify({'error': error_msg}), 500
 
@@ -396,4 +411,5 @@ def repo_topics():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    logger.info("Starting Flask server on port 5001...")
+    app.run(debug=True, port=5001) 
