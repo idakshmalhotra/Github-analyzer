@@ -18,6 +18,8 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
 
+console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+
 function App() {
   const [repo, setRepo] = useState('');
   const [loading, setLoading] = useState(false);
