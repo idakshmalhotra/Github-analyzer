@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
             
-            const response = await fetch(`http://127.0.0.1:5001/analyze?repo=${encodeURIComponent(repo)}`, {
+            const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+            const response = await fetch(`${API_URL}/analyze?repo=${encodeURIComponent(repo)}`, {
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
@@ -82,7 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Helper functions for new features
 async function fetchAndRenderTree(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/tree?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/tree?repo=${encodeURIComponent(repo)}`);
         const treeData = await res.json();
         if (treeData.tree) {
             window.renderDirectoryTree(treeData.tree);
@@ -96,7 +98,8 @@ async function fetchAndRenderTree(repo) {
 
 async function fetchAndRenderActivity(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/activity?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/activity?repo=${encodeURIComponent(repo)}`);
         const activityData = await res.json();
         if (activityData.activity) {
             window.renderActivityTimeline(activityData.activity);
@@ -110,7 +113,8 @@ async function fetchAndRenderActivity(repo) {
 
 async function fetchAndRenderCoverage(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/coverage?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/coverage?repo=${encodeURIComponent(repo)}`);
         const coverageData = await res.json();
         window.renderTestCoverage(coverageData.coverage, coverageData.source);
     } catch (err) {
@@ -120,7 +124,8 @@ async function fetchAndRenderCoverage(repo) {
 
 async function fetchAndRenderStats(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/stats?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/stats?repo=${encodeURIComponent(repo)}`);
         const statsData = await res.json();
         if (statsData.error) {
             document.getElementById('stats-grid').innerHTML = '<p class="error">Error loading repository statistics.</p>';
@@ -134,7 +139,8 @@ async function fetchAndRenderStats(repo) {
 
 async function fetchAndRenderIssues(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/issues?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/issues?repo=${encodeURIComponent(repo)}`);
         const issuesData = await res.json();
         renderIssuesAnalysis(issuesData);
     } catch (err) {
@@ -144,7 +150,8 @@ async function fetchAndRenderIssues(repo) {
 
 async function fetchAndRenderPullRequests(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/pull-requests?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/pull-requests?repo=${encodeURIComponent(repo)}`);
         const prData = await res.json();
         renderPullRequestsAnalysis(prData);
     } catch (err) {
@@ -154,7 +161,8 @@ async function fetchAndRenderPullRequests(repo) {
 
 async function fetchAndRenderReleases(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/releases?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/releases?repo=${encodeURIComponent(repo)}`);
         const releasesData = await res.json();
         renderReleases(releasesData.releases);
     } catch (err) {
@@ -164,7 +172,8 @@ async function fetchAndRenderReleases(repo) {
 
 async function fetchAndRenderDependencies(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/dependencies?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/dependencies?repo=${encodeURIComponent(repo)}`);
         const depsData = await res.json();
         renderDependencies(depsData);
     } catch (err) {
@@ -174,7 +183,8 @@ async function fetchAndRenderDependencies(repo) {
 
 async function fetchAndRenderTopics(repo) {
     try {
-        const res = await fetch(`http://127.0.0.1:5001/topics?repo=${encodeURIComponent(repo)}`);
+        const API_URL = window.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+        const res = await fetch(`${API_URL}/topics?repo=${encodeURIComponent(repo)}`);
         const topicsData = await res.json();
         renderTopics(topicsData.topics);
     } catch (err) {

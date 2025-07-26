@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
+
 function App() {
   const [repo, setRepo] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +30,7 @@ function App() {
     setData(null);
 
     try {
-      const response = await axios.get(`/api/analyze?repo=${repo}`);
+      const response = await axios.get(`${API_URL}/api/analyze?repo=${repo}`);
       setData(response.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to analyze repository');
