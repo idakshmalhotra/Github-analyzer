@@ -28,7 +28,10 @@ def load_env():
 load_env()
 
 app = Flask(__name__)
-CORS(app, origins=["https://github-analyzer2.vercel.app"])
+CORS(app, origins=[
+    "https://github-analyzer2.vercel.app",
+    "https://github-analyzer2-git-main-bharat-s-projects-3e1e346b.vercel.app"
+])
 
 def get_github_client():
     # Optionally use a GitHub token for higher rate limits
