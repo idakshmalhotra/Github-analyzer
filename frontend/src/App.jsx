@@ -32,10 +32,38 @@ function App() {
     setData(null);
 
     try {
-      const response = await axios.get(`${API_URL}/api/analyze?repo=${repo}`);
-      setData(response.data);
+      // Fetch repo details
+      const repoRes = await fetch(`https://api.github.com/repos/${repo}`);
+      if (!repoRes.ok) throw new Error('Repository not found');
+      const repoData = await repoRes.json();
+
+      // Fetch contributors (top 10)
+      const contributorsRes = await fetch(`https://api.github.com/repos/${repo}/contributors?per_page=10`);
+      const contributors = contributorsRes.ok ? await contributorsRes.json() : [];
+
+      // Fetch languages
+      const languagesRes = await fetch(`https://api.github.com/repos/${repo}/languages`);
+      const languages = languagesRes.ok ? await languagesRes.json() : {};
+
+      // Format data to match previous backend response
+      setData({
+        name: repoData.name,
+        full_name: repoData.full_name,
+        description: repoData.description,
+        stars: repoData.stargazers_count,
+        forks: repoData.forks_count,
+        watchers: repoData.watchers_count,
+        open_issues: repoData.open_issues_count,
+        languages,
+        contributors: contributors.map(c => ({
+          login: c.login,
+          contributions: c.contributions
+        })),
+        created_at: repoData.created_at,
+        updated_at: repoData.updated_at
+      });
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to analyze repository');
+      setError(err.message || 'Failed to analyze repository');
     } finally {
       setLoading(false);
     }
