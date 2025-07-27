@@ -14,11 +14,7 @@ import {
   ListItemText,
   Divider,
 } from '@mui/material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'https://github-analyzer-bq96.onrender.com';
-
-console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+// Removed axios and backend API URL imports
 
 function App() {
   const [repo, setRepo] = useState('');
