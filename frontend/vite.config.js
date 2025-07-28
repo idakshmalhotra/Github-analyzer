@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://github-analyzer-bq96.onrender.com',
+        target: 'http://51.20.60.4:5000/',
         changeOrigin: true,
         secure: false,
       },
