@@ -36,7 +36,7 @@ CORS(app, origins=[
 
 def get_github_client():
     # Optionally use a GitHub token for higher rate limits
-    token = os.environ.get('GITHUB_TOKEN')
+    token = "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"
     if token:
         logger.info("Using GitHub token for higher rate limits")
         return Github(token, per_page=30)
